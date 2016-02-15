@@ -13,10 +13,11 @@ ymax =2
 
 #Want Smileyface PDF in 2D: 
 
-pe = 0.2  #prob of eye 1
+pe = 0.5  #prob of eye 1
 ps = 1.-pe #prob of smile
 
 sigma = 0.1
+sigmae = 0.3
 
 eyes = [[-1,1],[1,1]]
 
@@ -36,8 +37,9 @@ rs = sps.uniform().rvs(N)
 ts = sps.uniform().rvs(N)*np.pi
 cs = np.cos(ts)
 ss = np.sin(ts)
-dxs = sps.norm(0,sigma).rvs(N)
-dys = sps.norm(0,sigma).rvs(N)
+dxs = sps.norm(0,1).rvs(N)
+dys = sps.norm(0,1).rvs(N)
+sigmas = sigma*np.ones(N)
 
 for n in range(N):
     a = rs[n]
@@ -47,6 +49,7 @@ for n in range(N):
         b = randeyes.rvs()
         x = eyes[b][0]
         y = eyes[b][1]
+        sigmas[n]= sigmae
     else:
         x = cs[n]
         y = -1.*ss[n]
@@ -54,8 +57,8 @@ for n in range(N):
     xs[n]=x
     ys[n]=y
 
-xs = xs+dxs
-ys = ys+dys
+xs = xs+dxs*sigmas
+ys = ys+dys*sigmas
 
 X = np.transpose([xs,ys])
 
