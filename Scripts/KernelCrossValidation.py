@@ -48,11 +48,11 @@ X = fetch_great_wall()
 print "X.shape"
 print X.shape
 print X[0:10,:]
-X = X[0:100]
+X = X[0:1000]
 
 
-def CrossValidationScore(Xs,h):
-    kde = KernelDensity(h, kernel='tophat')
+def CrossValidationScore(Xs,h, kernel='gaussian'):
+    kde = KernelDensity(h, kernel=kernel)
     ret = 0.
     for i in range(len(Xs)):
         x = np.concatenate([Xs[0:i],Xs[i+1:-1]])
@@ -73,49 +73,52 @@ ymin, ymax = (-300, 200)
 hs = np.linspace(1,10,20)
 CVSs = np.zeros(len(hs))
 
-for i,h in enumerate(hs):
-    print "computing i,h ",i,h
-    CVSs[i] = CrossValidationScore(X,h)
+kernels = ['gaussian', 'exponential']#, 'tophat', 'linear', 'cosine', 'epanechnikov'] #the rest all give width=1 why??
+for kernel in kernels:
+  for i,h in enumerate(hs):
+      print "computing i,h ",i,h
+      CVSs[i] = CrossValidationScore(X,h, kernel=kernel)
 
-imin = np.argmax(CVSs)
-hmin = hs[imin]
-print "Best kernel width is ", hmin
-kde = KernelDensity(hmin, kernel='tophat')
-Xgrid = np.vstack(map(np.ravel, np.meshgrid(np.linspace(xmin, xmax, Nx),
-                                            np.linspace(ymin, ymax, Ny)))).T
-log_dens1 = kde.fit(X).score_samples(Xgrid)
-dens1 = X.shape[0] * np.exp(log_dens1).reshape((Ny, Nx))
+  imin = np.argmax(CVSs)
+  hmin = hs[imin]
+  print "Best kernel width is ", hmin
+  kde = KernelDensity(hmin, kernel=kernel)
+  Xgrid = np.vstack(map(np.ravel, np.meshgrid(np.linspace(xmin, xmax, Nx),
+                                              np.linspace(ymin, ymax, Ny)))).T
+  log_dens1 = kde.fit(X).score_samples(Xgrid)
+  dens1 = X.shape[0] * np.exp(log_dens1).reshape((Ny, Nx))
 
-#plt.show()
-fig,axes=plt.subplots(1,2)
-ax0=axes[0]
-ax2=axes[1]
+  #plt.show()
+  fig,axes=plt.subplots(1,2)
+  ax0=axes[0]
+  ax2=axes[1]
 
-for ax in [ax2]:
-    ax.set_xlim(ymin, ymax - 0.01)
-    ax.set_ylim(xmin, xmax)
+  for ax in [ax2]:
+      ax.set_xlim(ymin, ymax - 0.01)
+      ax.set_ylim(xmin, xmax)
 
 
-ax0.plot(hs,CVSs,'o')
-#ax1.set_aspect('equal')
-#ax1.scatter(X[:, 1], X[:, 0], s=1, lw=0, c='k')
-#ax1.text(0.95, 0.9, "input", ha='right', va='top',
-#         transform=ax1.transAxes,
-#         bbox=dict(boxstyle='round', ec='k', fc='w'))
-ax2.set_aspect('equal')
-ax2.imshow(dens1.T, origin='lower', norm=LogNorm(),
-           extent=(ymin, ymax, xmin, xmax), cmap=plt.cm.afmhot)
-ax2.scatter(X[:, 1], X[:, 0], s=1, lw=0, c='k')
-ax2.text(0.95, 0.9, "Gaussian $(h=%.2f)$"%hmin, ha='right', va='top',
-         transform=ax2.transAxes,
-         bbox=dict(boxstyle='round', ec='k', fc='w'))
-plt.show()
+  ax0.plot(hs,CVSs,'o')
+  #ax1.set_aspect('equal')
+  #ax1.scatter(X[:, 1], X[:, 0], s=1, lw=0, c='k')
+  #ax1.text(0.95, 0.9, "input", ha='right', va='top',
+  #         transform=ax1.transAxes,
+  #         bbox=dict(boxstyle='round', ec='k', fc='w'))
+  ax2.set_aspect('equal')
+  ax2.imshow(dens1.T, origin='lower', norm=LogNorm(),
+             extent=(ymin, ymax, xmin, xmax), cmap=plt.cm.afmhot)
+  ax2.scatter(X[:, 1], X[:, 0], s=1, lw=0, c='k')
+  ax2.text(0.95, 0.9, "%s $(h=%.2f)$"%(kernel, hmin), ha='right', va='top',
+           transform=ax2.transAxes,
+           bbox=dict(boxstyle='round', ec='k', fc='w'))
+  plt.savefig('%s.png'%(kernel))
+  plt.show()
 #
 ##------------------------------------------------------------
 ## Evaluate for several models
 #                                            np.linspace(ymin, ymax, Ny)))).T
 #
-kernels = ['gaussian']
+#kernels = ['gaussian']
 #dens = []
 #
 #
