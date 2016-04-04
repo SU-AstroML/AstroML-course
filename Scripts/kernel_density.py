@@ -46,9 +46,8 @@ ax1.legend(loc='best')
 # Predict on test set
 predictions = gmmb.predict(test_set[:, :-1])
 true_labels = test_set[:, -1]
-print true_labels
-print predictions
-correct = len(np.nonzero(predictions == true_labels))
-print 'Correct fraction: ', correct/float(len(true_labels))
+missclassifications = np.sum(np.abs(predictions-true_labels))
+correct_frac = 1. - missclassifications/float(len(true_labels))
+print 'Correct fraction: ', correct_frac
 
 pl.show()
