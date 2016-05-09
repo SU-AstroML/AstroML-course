@@ -65,9 +65,9 @@ for i, C in enumerate(C_vals):
         #print 'Completeness:', completeness
         #print 'Contamination:', contamination
 
-# Plot matrix
-#plot_confusion_matrix(cm)
-#plt.show()
+    # Plot matrix
+    #plot_confusion_matrix(cm)
+    #plt.show()
 
 
 # Plot contamination, completeness
