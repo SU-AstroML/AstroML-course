@@ -1,0 +1,2151 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/Users/emir/Dropbox/ptf_SESNe\n"
+     ]
+    }
+   ],
+   "source": [
+    "cd /Users/emir/Dropbox/ptf_SESNe/"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Using matplotlib backend: Qt4Agg\n",
+      "Populating the interactive namespace from numpy and matplotlib\n"
+     ]
+    }
+   ],
+   "source": [
+    "%pylab"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "import glob\n",
+    "from __future__ import division"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "sns=glob.glob('*')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "limits_r=glob.glob(\"*/*limr.txt\")\n",
+    "limits_g=glob.glob(\"*/*limg.txt\")\n",
+    "mag_r=glob.glob(\"*/*magr.txt\")\n",
+    "mag_g=glob.glob(\"*/*magg.txt\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "SNR=[]\n",
+    "for sn in sns:\n",
+    "    for i,name in enumerate(limits_r):\n",
+    "        if sn in name:\n",
+    "            if sn in mag_r[i]:\n",
+    "                SNR.append((sn,mag_r[i],limits_r[i]))\n",
+    "            else:\n",
+    "                print \"WARNING FILES DO NOT MATCH\"\n",
+    "SN_R=numpy.empty(len(SNR),dtype=[('name',object),('mag',object),('lim',object)])\n",
+    "SN_R[:]=SNR"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "SNG=[]\n",
+    "for sn in sns:\n",
+    "    for i,name in enumerate(limits_g):\n",
+    "        if sn in name:\n",
+    "            if sn in mag_g[i]:\n",
+    "                SNG.append((sn,mag_g[i],limits_g[i]))\n",
+    "            else:\n",
+    "                print \"WARNING FILES DO NOT MATCH\"\n",
+    "\n",
+    "SN_G=numpy.empty(len(SNG),dtype=[('name',object),('mag',object),('lim',object)])\n",
+    "SN_G[:]=SNG"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "snr=numpy.empty(len(SN_R),dtype=[('name',object),('mag',object),('lim',object)])\n",
+    "for i,sn in enumerate(SN_R):\n",
+    "    name=sn[0]\n",
+    "    lims=np.genfromtxt(sn[2],dtype=None,unpack=True,autostrip=True,names='jd,mag,err')\n",
+    "    mags=np.genfromtxt(sn[1],dtype=None,unpack=True,autostrip=True,names='jd,mag,err')\n",
+    "    snr[i]=(name,mags,lims)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "sng=numpy.empty(len(SN_G),dtype=[('name',object),('mag',object),('lim',object)])\n",
+    "for i,sn in enumerate(SN_G):\n",
+    "    name=sn[0]\n",
+    "    lims=np.genfromtxt(sn[2],dtype=None,unpack=True,autostrip=True,names='jd,mag,err')\n",
+    "    mags=np.genfromtxt(sn[1],dtype=None,unpack=True,autostrip=True,names='jd,mag,err')\n",
+    "    sng[i]=(name,mags,lims)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "np.save('/Users/emir/Astro/numpy/snr',snr)\n",
+    "np.save('/Users/emir/Astro/numpy/sng',sng)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "snr=np.load('/Users/emir/Dropbox/Astro/numpy/snr.npy')\n",
+    "sng=np.load('/Users/emir/Dropbox/Astro/numpy/sng.npy')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 478,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "with open('/Users/emir/Dropbox/Results/epochs_r.txt','w') as outfile:\n",
+    "    for i,sn in enumerate(snr['name']):\n",
+    "        SNe=sn\n",
+    "        magnitude=snr['mag'][i]['jd'][0]\n",
+    "        limindx= np.where(snr['lim'][i]['jd'] <= magnitude)\n",
+    "        limit=   snr['lim'][i]['jd'][limindx][-1]\n",
+    "        line=str(SNe)+' '+str(magnitude)+' '+str(limit)+'\\n'\n",
+    "        outfile.write(line)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 479,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "with open('/Users/emir/Dropbox/Results/epochs_g.txt','w') as outfile:\n",
+    "    for i,sn in enumerate(sng['name']):\n",
+    "        SNe=sn\n",
+    "        magnitude=sng['mag'][i]['jd'][0]\n",
+    "        limindx= np.where(sng['lim'][i]['jd'] <= magnitude)\n",
+    "        limit= sng['lim'][i]['jd'][limindx][-1]\n",
+    "        line=str(SNe)+' '+str(magnitude)+' '+str(limit)+'\\n'\n",
+    "        outfile.write(line)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "PATH='/Users/emir/Box Sync/OGLE-data/'\n",
+    "filename1=PATH+'SNIbc_template.dat'\n",
+    "nms='epochg,g,gerr,epochr,r,rerr,epochi,i,ierr,epochz,z,zerr'\n",
+    "SNIbc=numpy.genfromtxt(filename1,unpack=True,autostrip=True,names=nms,skip_header=1)\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "SN11dh_g=numpy.genfromtxt('../Results/11dh_g_band.dat',unpack=True,names='mjd,epoch,mag,err',autostrip=True)\n",
+    "SN11dh_r=numpy.genfromtxt('../Results/11dh_r_band.dat',unpack=True,names='mjd,epoch,mag,err',autostrip=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "def ABmag(fv):\n",
+    "    return (-5.0/2)*numpy.log10(fv)-48.6\n",
+    "def Fnu(Fl,lpivot):\n",
+    "    return (3.34e4)*((lpivot)**2)*Fl\n",
+    "    #return (Fl*(lpivot**2.0)/(3e8))\n",
+    "lambdapivot_g=4702 #(SDSS g)\n",
+    "lambdapivot_r=6175 #SDSS r\t6175"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "redshifts=np.genfromtxt('/Users/emir/Dropbox/Astro/iPTF/iptf_redshift.txt',names='sn,z',dtype=None)\n",
+    "classifications=np.genfromtxt('/Users/emir/Dropbox/Results/classifications.txt',names='sn,type',dtype=None,unpack=True,autostrip='True')     "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "def z(SuperNova):\n",
+    "    for i,sn in enumerate(redshifts['sn']):\n",
+    "        if sn == SuperNova:\n",
+    "            rs=redshifts['z'][i]\n",
+    "            break\n",
+    "    return rs       \n",
+    "\n",
+    "def ibc(SuperNova):\n",
+    "    for i,sn in enumerate(classifications['sn']):\n",
+    "        if sn == SuperNova:\n",
+    "            #If the Type is a IIb\n",
+    "            if classifications['type'][i] == 'IIb':\n",
+    "                \n",
+    "                return False\n",
+    "            else:\n",
+    "                return True\n",
+    "            "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "import astropy.cosmology\n",
+    "def dm(rs):\n",
+    "    distmod=astropy.cosmology.Planck15.distmod\n",
+    "    return distmod(rs).value"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "#GET THE SCALING FOR THE IBC Template (IGNORE THE Ic BROAD LINES!!!)\n",
+    "gband_arr=numpy.array([-18.46,-16.82,-18.15,-19.44,-18.20,-17.91,-17.63,-18.13,-18.34])\n",
+    "rband_arr=numpy.array([-18.67,-16.94,-18.12,-18.30,-19.44,-18.44,-18.05,-17.90,-18.06,-18.48])\n",
+    "rbandmax=np.mean(rband_arr) #USED FOR SCALING THE r-BAND TEMPLATE\n",
+    "gbandmax=np.mean(gband_arr) #USED FOR SCALING THE g-BAND TEMPLATE\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "#Prepare g and r band Ibc templates.\n",
+    "gmags=ABmag(Fnu(SNIbc['g'],lambdapivot_g))\n",
+    "rmags=ABmag(Fnu(SNIbc['r'],lambdapivot_r))\n",
+    "\n",
+    "gbandcorr=numpy.min(gmags)-gbandmax\n",
+    "rbandcorr=numpy.min(rmags)-rbandmax\n",
+    "\n",
+    "gmags=gmags-gbandcorr\n",
+    "rmags=rmags-rbandcorr\n",
+    "\n",
+    "#Shift from max to explosion epoch\n",
+    "gphase=SNIbc['epochg']-SNIbc['epochg'][0]\n",
+    "rphase=SNIbc['epochr']-SNIbc['epochr'][0]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-29.4604730135\n"
+     ]
+    }
+   ],
+   "source": [
+    "def distance_mod(DL):\n",
+    "    return -5.0*(numpy.log10(DL)-1)\n",
+    "\n",
+    "DMdh=distance_mod(7.8e6)\n",
+    "dhrs=1.0+0.002003 #kms\n",
+    "\n",
+    "print DMdh\n",
+    "gmagsIIb=(0.118+SN11dh_g['mag'])+DMdh\n",
+    "gphaseIIb=SN11dh_g['epoch']/(dhrs)\n",
+    "rmagsIIb=(0.082+SN11dh_r['mag'])+DMdh\n",
+    "rphaseIIb=SN11dh_r['epoch']/(dhrs)\n",
+    "\n",
+    "\n",
+    "\n",
+    "plt.plot(gphaseIIb,gmagsIIb)\n",
+    "plt.plot(rphaseIIb,rmagsIIb)\n",
+    "\n",
+    "plt.gca().invert_yaxis()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "from lmfit import minimize,Parameters, Parameter, report_fit\n",
+    "from scipy.interpolate import interp1d\n",
+    "\n",
+    "#Initialize guesses for Ibc parameters\n",
+    "params=Parameters()\n",
+    "params.add('stretch',value=1.0, min=0.01, max=3.0)\n",
+    "params.add('shift',value=-5.0, min=-50, max=50.0)\n",
+    "params.add('scale',value=1.0, min=-6.0, max=6.0)\n",
+    "\n",
+    "\n",
+    "#Initialize guesses for IIb parameters\n",
+    "paramsIIb=Parameters()\n",
+    "paramsIIb.add('stretch',value=1.1, min=0.01, max=3.0)\n",
+    "paramsIIb.add('shift',value=-50.0, min=-150.0, max=50.0)\n",
+    "paramsIIb.add('scale',value=1.0, min=-5.0, max=5.0)\n",
+    "\n",
+    "\n",
+    "\n",
+    "\n",
+    "#Helper function to stretch a light curve\n",
+    "def lets_stretch(xdata,ydata,s=0.0,k=0.0,A=0.0): #Shift, Stretch, Amplitude\n",
+    "    tempx=xdata*k +s\n",
+    "    tempy=ydata+A\n",
+    "    return tempx,tempy\n",
+    "\n",
+    "#Define Fit Func for LMFIT (Might have to do a brute force method myself later)\n",
+    "\n",
+    "#X data is redshift corrected SN LC, (with first detection as explosion epoch.) \n",
+    "#ydata is distance modulus corrected Absolute Magnitudes\n",
+    "#params are defined with initial guesses and boundaries\n",
+    "#filter is either g or r\n",
+    "#sigma is same length as xdata and y data\n",
+    "def lets_interp_IIb(paramsIIb,xdata,ydata,filt='g',sigma=None):  #,s=0.0,A=0.0,shift=0.0\n",
+    "    #Read parameters\n",
+    "    k=paramsIIb['stretch']\n",
+    "    s=paramsIIb['shift']\n",
+    "    A=paramsIIb['scale']\n",
+    "    \n",
+    "\n",
+    "    #Pick correct filter\n",
+    "    if filt=='g':\n",
+    "        xtemp=gphaseIIb\n",
+    "        ytemp=gmagsIIb   \n",
+    "    if filt=='r':\n",
+    "        xtemp=rphaseIIb\n",
+    "        ytemp=rmagsIIb\n",
+    "        \n",
+    "    #Zeroset the peak\n",
+    "    #biggest=numpy.mean(sorted(ydata)[:3])    \n",
+    "    #shift_by=biggest-ytemp.min()\n",
+    "    #ytemp=ytemp+shift_by    \n",
+    "    \n",
+    "    #Pick peakdays days within peak to fit.\n",
+    "    #peaki=ydata.argmin()\n",
+    "    #peakindx=np.where((xdata >= (xdata[peaki] - peakdays)) & (xdata <=(xdata[peaki] + peakdays)))\n",
+    "    #ydata=ydata[peakindx]\n",
+    "    #xdata=xdata[peakindx]\n",
+    "    \n",
+    "    #Stretch and scale\n",
+    "    xtemp,ytemp=lets_stretch(xtemp,ytemp,s,k,A)\n",
+    "    \n",
+    "    #Interpolate\n",
+    "    f = interp1d(xtemp,ytemp,fill_value=\"extrapolate\")\n",
+    "    \n",
+    "    #Interpolate Template to the X values of the Data\n",
+    "    x_temp_new=xdata\n",
+    "    y_temp_new=f(x_temp_new)\n",
+    "    \n",
+    "    y_temp_new=np.array(y_temp_new,dtype='float64')\n",
+    "    \n",
+    "    #Calculate Residual\n",
+    "    res=y_temp_new-ydata\n",
+    "    \n",
+    "    #Calcualte Reduced Chi Sq Statistic\n",
+    "    #res=redchisqg(ydata,y_temp_new,deg=3,sd=None)\n",
+    "    \n",
+    "    #weights\n",
+    "    if sigma is not None:\n",
+    "        weights= numpy.sqrt(res**2 / sigma**2)\n",
+    "    else:\n",
+    "        weights=res\n",
+    "    return weights\n",
+    "   \n",
+    "       \n",
+    "\n",
+    "\n",
+    "def lets_interp(params,xdata,ydata,filt='g',sigma=None):  #,s=0.0,A=0.0,shift=0.0\n",
+    "    #Read parameters\n",
+    "    k=params['stretch']\n",
+    "    s=params['shift']\n",
+    "    A=params['scale']\n",
+    "    \n",
+    "    #Pick correct filter\n",
+    "    if filt=='g':\n",
+    "        xtemp=gphase\n",
+    "        ytemp=gmags\n",
+    "    if filt=='r':\n",
+    "        xtemp=rphase\n",
+    "        ytemp=rmags\n",
+    "    \n",
+    "    #Zeroset the peak\n",
+    "    #biggest=numpy.mean(sorted(ydata)[:3])    \n",
+    "    #shift_by=biggest-ytemp.min()\n",
+    "    #ytemp=ytemp+shift_by    \n",
+    "    \n",
+    "    #Pick peakdays days within peak to fit.\n",
+    "    #peaki=ydata.argmin()\n",
+    "    #peakindx=np.where((xdata >= (xdata[peaki] - peakdays)) & (xdata <=(xdata[peaki] + peakdays)))\n",
+    "    #ydata=ydata[peakindx]\n",
+    "    #xdata=xdata[peakindx] \n",
+    "        \n",
+    "    #Stretch and scale\n",
+    "    xtemp,ytemp=lets_stretch(xtemp,ytemp,s,k,A)\n",
+    "    \n",
+    "    #Interpolate\n",
+    "    f = interp1d(xtemp,ytemp,fill_value=\"extrapolate\")\n",
+    "    \n",
+    "    #Interpolate Template to the X values of the Data\n",
+    "    x_temp_new=xdata\n",
+    "    y_temp_new=f(x_temp_new)\n",
+    "    \n",
+    "    y_temp_new=np.array(y_temp_new,dtype='float64')\n",
+    "    \n",
+    "    #Calculate Residual\n",
+    "    res=y_temp_new-ydata\n",
+    "    \n",
+    "    #Calcualte Reduced Chi Sq Statistic\n",
+    "    #res=redchisqg(ydata,y_temp_new,deg=3,sd=None)\n",
+    "    \n",
+    "    #weights\n",
+    "    if sigma is not None:\n",
+    "        weights= numpy.sqrt(res**2 / sigma**2)\n",
+    "    else:\n",
+    "        weights=res\n",
+    "    return weights\n",
+    "   \n",
+    "    \n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 891,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "#sng[-1][1]=np.delete(sng[-1][1],0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "def get_sn_data(snname,bandpass):\n",
+    "    if bandpass=='r':\n",
+    "        use=snr\n",
+    "    if bandpass=='g':\n",
+    "        use=sng\n",
+    "    \n",
+    "    \n",
+    "    for i,sn in enumerate(use['name']):\n",
+    "        if snname==sn:\n",
+    "            index=i\n",
+    "            break\n",
+    "            \n",
+    "    rs=z(use['name'][index])\n",
+    "    i_ph=use['mag'][index]['jd'][0]\n",
+    "    \n",
+    "    xdata=(use['mag'][index]['jd']-i_ph)/(1.0+rs)\n",
+    "    ydata=use['mag'][index]['mag']-dm(rs)\n",
+    "    errors=use['mag'][index]['err']\n",
+    "    \n",
+    "    if ibc(snname):\n",
+    "        sntype=True\n",
+    "        print 'Ibc'\n",
+    "    else:\n",
+    "        sntype=False\n",
+    "        print 'IIb'\n",
+    "    return xdata,ydata,errors,sntype,rs,i_ph,index\n",
+    "\n",
+    "minIbc=gmags.min()\n",
+    "minIIb=gmagsIIb.min()\n",
+    "minIbc_r=rmags.min()\n",
+    "minIIb_r=rmagsIIb.min()\n",
+    "\n",
+    "def zeroset(ydata,bandpass='g',ibc=True,verbose=False):\n",
+    "    if ibc:\n",
+    "        if bandpass=='g':\n",
+    "            templatepeak=minIbc\n",
+    "        elif bandpass=='r':\n",
+    "            templatepeak=minIbc_r\n",
+    "    else:\n",
+    "        if bandpass=='g':\n",
+    "            templatepeak=minIIb\n",
+    "        elif bandpass=='r':\n",
+    "            templatepeak=minIIb_r\n",
+    "        \n",
+    "    #Zeroset the peak\n",
+    "    biggest=numpy.mean(sorted(ydata)[:3])    \n",
+    "    shift_by=biggest-templatepeak\n",
+    "    ydata=ydata-shift_by\n",
+    "    \n",
+    "    if not verbose:\n",
+    "        return ydata\n",
+    "    elif verbose:\n",
+    "        return ydata,shift_by\n",
+    "    \n",
+    "def peakset(xdata,ydata,errors,peakdays):\n",
+    "    #Pick peakdays days within peak to fit.\n",
+    "    peaki=ydata.argmin()\n",
+    "    peakindx=np.where((xdata >= (xdata[peaki] - peakdays)) & (xdata <=(xdata[peaki] + peakdays)))\n",
+    "    ydata=ydata[peakindx]\n",
+    "    xdata=xdata[peakindx]\n",
+    "    errors=errors[peakindx]\n",
+    "\n",
+    "    return xdata,ydata,errors\n",
+    "        \n",
+    "\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# FIT INDIVIDUALLY"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "IIb\n"
+     ]
+    }
+   ],
+   "source": [
+    "#def adjust(snname,bandpass)\n",
+    "#Names\n",
+    "snname='15eqv'\n",
+    "bandpass='g'\n",
+    "peakdays=120 #+/- peakdays\n",
+    "\n",
+    "#Pts to exclude #More advanced stuff possible see commented out section\n",
+    "init=0 #(from beginning)\n",
+    "fin=0  #(from end)\n",
+    "\n",
+    "\n",
+    "#Get data in correct filter and form #(Also print Type)\n",
+    "xdata_org,ydata_org,errors_org,sntype,rs,i_ph,index=get_sn_data(snname,bandpass)\n",
+    "\n",
+    "\n",
+    "#zeroset\n",
+    "ydata_org,theshift=zeroset(ydata_org,bandpass,sntype,verbose=True)\n",
+    "#Pick N values around peak\n",
+    "xdata,ydata,errors=peakset(xdata_org,ydata_org,errors_org,peakdays)\n",
+    "\n",
+    "fin=len(xdata)-fin\n",
+    "xdata=xdata[init:fin]\n",
+    "ydata=ydata[init:fin]\n",
+    "errors=errors[init:fin]\n",
+    "#Save limits\n",
+    "if bandpass=='r':\n",
+    "    xlims=(snr[index]['lim']['jd']-i_ph)/(1+rs)\n",
+    "    ylims=(snr[index]['lim']['mag']-dm(rs))#-theshift\n",
+    "if bandpass=='g':\n",
+    "    xlims=(sng[index]['lim']['jd']-i_ph)/(1+rs)\n",
+    "    ylims=(sng[index]['lim']['mag']-dm(rs))#-theshift\n",
+    "    \n",
+    "#Manually set SN Type True=Ibc, False=IIb\n",
+    "#sntype=False\n",
+    "#Fit\n",
+    "if sntype:\n",
+    "    result=minimize(lets_interp,params,args=(xdata,ydata,bandpass,None))\n",
+    "else:\n",
+    "    result=minimize(lets_interp_IIb,paramsIIb,args=(xdata,ydata,bandpass,None))\n",
+    "    \n",
+    "#!!!!!Tricks!!!!!:\n",
+    "#np.delete(xdata,28)[4:-1],np.delete(ydata,28)[4:-1]\n",
+    "#np.where(np.logical_or(xdata<18,xdata>19))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<Parameter 'stretch', value=0.74748594586430317 +/- 0.0518, bounds=[0.01:3.0]>\n",
+      "<Parameter 'shift', value=-28.959260628179237 +/- 6.45, bounds=[-150.0:50.0]>\n",
+      "<Parameter 'scale', value=-1.7464236205083705 +/- 0.132, bounds=[-5.0:5.0]>\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Save Params\n",
+    "stretch_out=result.params['stretch']\n",
+    "shift_out=result.params['shift']#-45\n",
+    "scale_out=result.params['scale']#-1.3\n",
+    "\n",
+    "print stretch_out\n",
+    "print shift_out\n",
+    "print scale_out"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(-50.0, 145.29763089790316)"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "snlabel=snname\n",
+    "if sntype:\n",
+    "    if bandpass=='g':\n",
+    "        bestmodel=lets_stretch(gphase,gmags,shift_out,stretch_out,scale_out)\n",
+    "    else:\n",
+    "        bestmodel=lets_stretch(rphase,rmags,shift_out,stretch_out,scale_out)\n",
+    "    snlabel+=' : Type Ibc'\n",
+    "else:\n",
+    "    if bandpass=='g':\n",
+    "        bestmodel=lets_stretch(gphaseIIb,gmagsIIb,shift_out,stretch_out,scale_out)\n",
+    "    else:\n",
+    "        bestmodel=lets_stretch(rphaseIIb,rmagsIIb,shift_out,stretch_out,scale_out)\n",
+    "    snlabel+=' : Type IIb'\n",
+    "\n",
+    "explosion_date=(bestmodel[0][0]*(1+rs))+i_ph\n",
+    "\n",
+    "\n",
+    "\n",
+    "\n",
+    "#plt.figure()\n",
+    "ax = plt.axes(axisbg='w')  \n",
+    "ax.errorbar(xdata,ydata+theshift,errors,c='black',linestyle='None',marker='s',label=snlabel)\n",
+    "if not len(xdata_org)==len(xdata):\n",
+    "    ax.errorbar(xdata_org,ydata_org+theshift,errors_org,c='grey',linestyle='None',marker='s',alpha=0.5)\n",
+    "ax.plot(bestmodel[0],bestmodel[1]+theshift,c='red') \n",
+    "ax.plot(xlims,ylims,linestyle='None',marker='v',color='black',markersize=3.0)\n",
+    "ax.invert_yaxis()\n",
+    "ax.legend()\n",
+    "plt.xlim((xdata_org[0]-50,xdata_org[-1]+50))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 81,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2457319.50308\n"
+     ]
+    }
+   ],
+   "source": [
+    "##SAVE NEW VERSION AND MODIFY PARAMETERS IN LIST (Do not close the plot window)\n",
+    "\n",
+    "#Modify Lists\n",
+    "if bandpass=='r':\n",
+    "    filepath='../Results/Figues/new/rband/'+str(snname)+'_mod.pdf'\n",
+    "    epochs_r[index]=explosion_date\n",
+    "    paramslist_r[index]=(stretch_out,shift_out,scale_out)\n",
+    "    modellist_r[index]=bestmodel\n",
+    "    \n",
+    "if bandpass=='g':\n",
+    "    filepath='../Results/Figues/new/gband/'+str(snname)+'_mod.pdf'\n",
+    "    epochs[index]=explosion_date\n",
+    "    paramslist[index]=(stretch_out,shift_out,scale_out)\n",
+    "    modellist[index]=bestmodel\n",
+    "\n",
+    "#SAVE FIG \n",
+    "plt.savefig(filepath,format='pdf')\n",
+    "\n",
+    "#Print epoch\n",
+    "print explosion_date"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# AUTO FIT ALL G-Band Data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Ibc\n",
+      "solving template fit for: iPTF 11lmn\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14fuz\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14gao\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14gqr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14ibr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15acp\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15acr\n",
+      "IIb\n",
+      "solving template fit for: iPTF 15afw\n",
+      "IIb\n",
+      "solving template fit for: iPTF 15cna\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15cpq\n",
+      "IIb\n",
+      "solving template fit for: iPTF 15dpa\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15dqg\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15dvg\n",
+      "IIb\n",
+      "solving template fit for: iPTF 15eqv\n"
+     ]
+    }
+   ],
+   "source": [
+    "peakdays=30\n",
+    "bandpass='g'\n",
+    "paramslist=[]\n",
+    "modellist=[]\n",
+    "snlist=[]\n",
+    "snlist_org=[]\n",
+    "chisq_list=[]\n",
+    "epochs=[]\n",
+    "lim_list=[]\n",
+    "g_band_shifts=[]\n",
+    "for supernova in sng:\n",
+    "    #Get data in correct filter and form #(Also print Type)\n",
+    "    xdata_org,ydata_org,errors_org,classify,rs,i_ph,trash=get_sn_data(supernova['name'],bandpass)\n",
+    "\n",
+    "    #zeroset\n",
+    "    ydata_org,theshift=zeroset(ydata_org,bandpass,classify,verbose=True)\n",
+    "    \n",
+    "    #Pick N values around peak\n",
+    "    xdata,ydata,errors=peakset(xdata_org,ydata_org,errors_org,peakdays)\n",
+    "    \n",
+    "    #Save limits for plotting\n",
+    "    xlims=(sng[trash]['lim']['jd']-i_ph)/(1+rs)\n",
+    "    ylims=(sng[trash]['lim']['mag']-dm(rs))\n",
+    "    \n",
+    "    print 'solving template fit for: iPTF',supernova['name']\n",
+    "    \n",
+    "    if len(xdata)>3:\n",
+    "        if classify:\n",
+    "            snlabel=supernova['name'] + ' : Type Ibc'\n",
+    "            result=minimize(lets_interp,params,args=(xdata,ydata,'g',None))\n",
+    "            #Save params\n",
+    "            stretch_out=result.params['stretch']\n",
+    "            shift_out=result.params['shift']\n",
+    "            scale_out=result.params['scale']\n",
+    "\n",
+    "            #Save model\n",
+    "            bestmodel=lets_stretch(gphase,gmags,shift_out,stretch_out,scale_out)\n",
+    "        else:\n",
+    "            snlabel=supernova['name'] + ' : Type IIb'\n",
+    "            result=minimize(lets_interp_IIb,paramsIIb,args=(xdata,ydata,'g',None))\n",
+    "            #Save params\n",
+    "            stretch_out=result.params['stretch']\n",
+    "            shift_out=result.params['shift']\n",
+    "            scale_out=result.params['scale']\n",
+    "\n",
+    "            #Save model\n",
+    "            bestmodel=lets_stretch(gphaseIIb,gmagsIIb,shift_out,stretch_out,scale_out)\n",
+    "    else:\n",
+    "        print 'insufficient points (<=3), skipped: iPTF',supernova['name']\n",
+    "        snlabel=supernova['name'] + ' : SKIPPED'\n",
+    "    \n",
+    "    #Explosion epoch\n",
+    "    explosion_date=(bestmodel[0][0]*(1+rs))+i_ph\n",
+    "    epochs.append(explosion_date)\n",
+    "    \n",
+    "    \n",
+    "    chisq_list.append(result.redchi)\n",
+    "    #Save to list\n",
+    "    lim_list.append((xlims,ylims))\n",
+    "    snlist_org.append((xdata_org,ydata_org,errors_org,snlabel))\n",
+    "    paramslist.append((stretch_out,shift_out,scale_out))\n",
+    "    modellist.append(bestmodel) #min of this is the peak.\n",
+    "    snlist.append((xdata,ydata,errors))\n",
+    "    g_band_shifts.append(theshift)\n",
+    "    \n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "plt.ioff()\n",
+    "for i,snname in enumerate(sng['name']):\n",
+    "    plt.figure()\n",
+    "    ax = plt.axes(axisbg='w')\n",
+    "    if not len(snlist_org[i][0])==len(snlist[i][0]):\n",
+    "        ax.errorbar(snlist_org[i][0],snlist_org[i][1]+g_band_shifts[i],snlist_org[i][2],c='grey',linestyle='None',marker='s',alpha=0.5)\n",
+    "    ax.errorbar(snlist[i][0],snlist[i][1]+g_band_shifts[i],snlist[i][2],linestyle='None',marker='s',label=snlist_org[i][3])\n",
+    "    ax.plot(modellist[i][0],modellist[i][1]+g_band_shifts[i],c='red')\n",
+    "    ax.plot(lim_list[i][0],lim_list[i][1],linestyle='None',marker='v',color='black',markersize=3.0)\n",
+    "    ax.invert_yaxis()\n",
+    "    ax.legend()\n",
+    "    plt.xlim((snlist_org[i][0][0]-50,snlist_org[i][0][-1]+50))\n",
+    "    filepath='../Results/Figues/new/gband/'+str(snname)+'.pdf'\n",
+    "    plt.savefig(filepath,format='pdf')\n",
+    "    plt.close()\n",
+    "\n",
+    "plt.ion()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# AUTO FIT ALL R-BAND DATA"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 918,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Ibc\n",
+      "solving template fit for: iPTF 09awk\n",
+      "IIb\n",
+      "solving template fit for: iPTF 09dah\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 09dfk\n",
+      "IIb\n",
+      "solving template fit for: iPTF 09dsj\n",
+      "IIb\n",
+      "solving template fit for: iPTF 09dxv\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 09dzt\n",
+      "IIb\n",
+      "solving template fit for: iPTF 09fae\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 09fsr\n",
+      "IIb\n",
+      "solving template fit for: iPTF 09gxq\n",
+      "insufficient points (<=3), skipped: iPTF 09gxq\n",
+      "IIb\n",
+      "solving template fit for: iPTF 09gyp\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 09iqd\n",
+      "insufficient points (<=3), skipped: iPTF 09iqd\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 09ps\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10abck\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10acbu\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10acff\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10acgq\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10bfz\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10bhu\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10bip\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10eqi\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10fbv\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10feq\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10fia\n",
+      "insufficient points (<=3), skipped: iPTF 10fia\n",
+      "IIb\n",
+      "solving template fit for: iPTF 10fmr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10hcw\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10hfe\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10hie\n",
+      "IIb\n",
+      "solving template fit for: iPTF 10in\n",
+      "IIb\n",
+      "solving template fit for: iPTF 10in\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10inj\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10kui\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10lbo\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10ood\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10ooe\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10osn\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10pbi\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10qif\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10qqd\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10svt\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10tqi\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10tqv\n",
+      "IIb\n",
+      "solving template fit for: iPTF 10tud\n",
+      "IIb\n",
+      "solving template fit for: iPTF 10tzh\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10uhf\n",
+      "IIb\n",
+      "solving template fit for: iPTF 10vns\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10vnv\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10vwg\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10wal\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10xfh\n",
+      "IIb\n",
+      "solving template fit for: iPTF 10xfl\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10xik\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10xjr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10yow\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 10zcn\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11all\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11bli\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11dhf\n",
+      "IIb\n",
+      "solving template fit for: iPTF 11dlg\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11hyg\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11ilr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11ixk\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11izq\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11izr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11jgj\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11kaa\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11klg\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11mwk\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11oni\n",
+      "IIb\n",
+      "solving template fit for: iPTF 11po\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11qiq\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11rfh\n",
+      "insufficient points (<=3), skipped: iPTF 11rfh\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 11rka\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12bwq\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12cde\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12cjy\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12fes\n",
+      "IIb\n",
+      "solving template fit for: iPTF 12fhz\n",
+      "IIb\n",
+      "solving template fit for: iPTF 12fxj\n",
+      "IIb\n",
+      "solving template fit for: iPTF 12gpn\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12gty\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12gvr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12hni\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12hvv\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12jxd\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12ktu\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12lpo\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12ltw\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12lvt\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 12mfx\n",
+      "IIb\n",
+      "solving template fit for: iPTF 13aby\n",
+      "IIb\n",
+      "solving template fit for: iPTF 13aoo\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 13aot\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 13cab\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 13cbf\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 13ccj\n",
+      "IIb\n",
+      "solving template fit for: iPTF 13cr\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 13dht\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 13dug\n",
+      "IIb\n",
+      "solving template fit for: iPTF 13ebs\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 13edf\n",
+      "IIb\n",
+      "solving template fit for: iPTF 13v\n",
+      "IIb\n",
+      "solving template fit for: iPTF 14aag\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14ait\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14apl\n",
+      "IIb\n",
+      "solving template fit for: iPTF 14atc\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14bpy\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14cyn\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14igl\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14va\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 14ym\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15adv\n",
+      "IIb\n",
+      "solving template fit for: iPTF 15cam\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15dh\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15dld\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15dqb\n",
+      "IIb\n",
+      "solving template fit for: iPTF 15eoc\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15eov\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15fhl\n",
+      "Ibc\n",
+      "solving template fit for: iPTF 15n\n",
+      "IIb\n",
+      "solving template fit for: iPTF 16he\n"
+     ]
+    }
+   ],
+   "source": [
+    "peakdays=45\n",
+    "bandpass='r'\n",
+    "epochs_r=[]\n",
+    "paramslist_r=[]\n",
+    "modellist_r=[]\n",
+    "snlist_r=[]\n",
+    "snlist_org_r=[]\n",
+    "chisq_list=[]\n",
+    "lim_list_r=[]\n",
+    "r_band_shifts=[]\n",
+    "for supernova in snr:\n",
+    "    \n",
+    "    #Get data in correct filter and form #(Also print Type)\n",
+    "    xdata_org,ydata_org,errors_org,classify,rs,i_ph,trash=get_sn_data(supernova['name'],bandpass)\n",
+    "\n",
+    "    #zeroset\n",
+    "    ydata_org,theshift=zeroset(ydata_org,bandpass,classify,verbose=True)\n",
+    "    \n",
+    "    #Pick N values around peak\n",
+    "    xdata,ydata,errors=peakset(xdata_org,ydata_org,errors_org,peakdays)\n",
+    "    \n",
+    "    \n",
+    "    #Save limits for plotting\n",
+    "    xlims=(snr[trash]['lim']['jd']-i_ph)/(1+rs)\n",
+    "    ylims=(snr[trash]['lim']['mag']-dm(rs))#-theshift\n",
+    "    \n",
+    "    print 'solving template fit for: iPTF',supernova['name']\n",
+    "    \n",
+    "    if len(xdata)>3:\n",
+    "        if classify:\n",
+    "            snlabel=supernova['name'] + ' : Type Ibc'\n",
+    "            result=minimize(lets_interp,params,args=(xdata,ydata,'r',None))\n",
+    "            #Save params\n",
+    "            stretch_out=result.params['stretch']\n",
+    "            shift_out=result.params['shift']\n",
+    "            scale_out=result.params['scale']\n",
+    "\n",
+    "            #Save model\n",
+    "            bestmodel=lets_stretch(rphase,rmags,shift_out,stretch_out,scale_out)\n",
+    "        else:\n",
+    "            snlabel=supernova['name'] + ' : Type IIb'\n",
+    "            result=minimize(lets_interp_IIb,paramsIIb,args=(xdata,ydata,'r',None))\n",
+    "            #Save params\n",
+    "            stretch_out=result.params['stretch']\n",
+    "            shift_out=result.params['shift']\n",
+    "            scale_out=result.params['scale']\n",
+    "\n",
+    "            #Save model\n",
+    "            bestmodel=lets_stretch(rphaseIIb,rmagsIIb,shift_out,stretch_out,scale_out)\n",
+    "\n",
+    "\n",
+    "        \n",
+    "    else:\n",
+    "        print 'insufficient points (<=3), skipped: iPTF',supernova['name']\n",
+    "        snlabel=supernova['name'] + ' : SKIPPED'\n",
+    "    \n",
+    "    \n",
+    "\n",
+    "    #Explosion epoch\n",
+    "    explosion_date=(bestmodel[0][0]*(1+rs))+i_ph\n",
+    "    epochs_r.append(explosion_date)\n",
+    "    \n",
+    "    lim_list_r.append((xlims,ylims))\n",
+    "    snlist_org_r.append((xdata_org,ydata_org,errors_org,snlabel))\n",
+    "    paramslist_r.append((stretch_out,shift_out,scale_out))\n",
+    "    modellist_r.append(bestmodel)\n",
+    "    snlist_r.append((xdata,ydata,errors))\n",
+    "    r_band_shifts.append(theshift)\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 919,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "plt.ioff()\n",
+    "for i,snname in enumerate(snr['name']):\n",
+    "    plt.figure()\n",
+    "    ax = plt.axes(axisbg='w')\n",
+    "    if not len(snlist_org_r[i][0])==len(snlist_r[i][0]):\n",
+    "        ax.errorbar(snlist_org_r[i][0],snlist_org_r[i][1]+r_band_shifts[i],snlist_org_r[i][2],c='grey',linestyle='None',marker='s',alpha=0.5)\n",
+    "    ax.errorbar(snlist_r[i][0],snlist_r[i][1]+r_band_shifts[i],snlist_r[i][2],linestyle='None',marker='s',label=snlist_org_r[i][3])\n",
+    "    ax.plot(modellist_r[i][0],modellist_r[i][1]+r_band_shifts[i],c='red')\n",
+    "    ax.plot(lim_list_r[i][0],lim_list_r[i][1],linestyle='None',marker='v',markersize=3.0,c='black')\n",
+    "    ax.invert_yaxis()\n",
+    "    ax.legend()\n",
+    "    filepath='../Results/Figues/new/rband/'+str(snname)+'.pdf'\n",
+    "    plt.xlim((snlist_org_r[i][0][0]-50,snlist_org_r[i][0][-1]+50))\n",
+    "    plt.savefig(filepath,format='pdf')\n",
+    "    plt.close()\n",
+    "\n",
+    "plt.ion()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 916,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "10kui\n",
+      "11hyg\n",
+      "11ilr\n"
+     ]
+    }
+   ],
+   "source": [
+    "#for i,val in enumerate(paramslist_r):\n",
+    "#    print i,val[0]\n",
+    "print snr[30]['name']\n",
+    "print snr[58]['name']\n",
+    "print snr[59]['name']"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# SAVE EPOCHS TO FILE"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 83,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "with open('../Results/fit_epochs_g_new.txt','w') as f:\n",
+    "    for i,sn in enumerate(sng['name']):\n",
+    "        line=str(sn)+' '+str(epochs[i])+'\\n'\n",
+    "        f.write(line)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "with open('../Results/fit_epochs_r_new.txt','w') as f:\n",
+    "    for i,sn in enumerate(snr['name']):\n",
+    "        line=str(sn)+' '+str(epochs_r[i])+'\\n'\n",
+    "        f.write(line)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# How many SN did we fit"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 921,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "134"
+      ]
+     },
+     "execution_count": 921,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "len(sng)+len(snr)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Save Lists as Numpy Arrays"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 922,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "p1='/Users/emir/Dropbox/Astro/numpy/'\n",
+    "np.save('/Users/emir/Dropbox/Astro/numpy/snr.npy',snr)\n",
+    "np.save('/Users/emir/Dropbox/Astro/numpy/sng.npy',sng)\n",
+    "np.save(p1+'epoch_g.npy',     np.array(epochs))\n",
+    "np.save(p1+'epochs_r',        np.array(epochs_r))\n",
+    "np.save(p1+'paramslist',      np.array(paramslist))\n",
+    "np.save(p1+'paramslist_r',    np.array(paramslist_r))\n",
+    "np.save(p1+'modellist',       np.array(modellist))\n",
+    "np.save(p1+'modellist_r',     np.array(modellist_r))\n",
+    "np.save(p1+'lim_list',        np.array(lim_list))\n",
+    "np.save(p1+'lim_list_r',      np.array(lim_list_r))\n",
+    "np.save(p1+'snlist',          np.array(snlist))\n",
+    "np.save(p1+'snlist_r',        np.array(snlist_r))\n",
+    "np.save(p1+'snlist_org',      np.array(snlist_org))\n",
+    "np.save(p1+'snlist_org_r',    np.array(snlist_org_r))\n",
+    "np.save(p1+'g_band_shifts',   np.array(g_band_shifts))\n",
+    "np.save(p1+'r_band_shifts',   np.array(r_band_shifts))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Load Numpy Arrays/Lists"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "p1='/Users/emir/Dropbox/Astro/numpy/'\n",
+    "snr=np.load(p1+'/snr.npy')\n",
+    "sng=np.load(p1+'sng.npy')\n",
+    "epochs=np.load(p1+'epoch_g.npy')\n",
+    "epochs_r=np.load(p1+'epochs_r.npy') \n",
+    "paramslist=np.load(p1+'paramslist.npy'  )\n",
+    "paramslist_r=np.load(p1+'paramslist_r.npy')\n",
+    "modellist=np.load(p1+'modellist.npy'     )\n",
+    "modellist_r=np.load(p1+'modellist_r.npy' )\n",
+    "lim_list=np.load(p1+'lim_list.npy'    )\n",
+    "lim_list_r=np.load(p1+'lim_list_r.npy'   )\n",
+    "snlist=np.load(p1+'snlist.npy'          )\n",
+    "snlist_r=np.load(p1+'snlist_r.npy'       )\n",
+    "snlist_org=np.load(p1+'snlist_org.npy'   )\n",
+    "snlist_org_r=np.load(p1+'snlist_org_r.npy')\n",
+    "g_band_shifts=np.load(p1+'g_band_shifts.npy')\n",
+    "r_band_shifts=np.load(p1+'r_band_shifts.npy')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Model Parameter Playground"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 158,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "stretchvals=np.zeros(len(g_band_shifts))\n",
+    "scalevals=np.zeros(len(g_band_shifts))\n",
+    "shiftvals=np.zeros(len(g_band_shifts))\n",
+    "for i in xrange(len(g_band_shifts)):\n",
+    "    stretchvals[i]=paramslist[i][0].value\n",
+    "    scalevals[i]=paramslist[i][2].value+g_band_shifts[i]\n",
+    "    shiftvals[i]=paramslist[i][1].value\n",
+    "    #print paramslist[i][0].value\n",
+    "    #print paramslist[i][2]\n",
+    "    #print g_band_shifts[i]\n",
+    "    \n",
+    "rstretchvals=np.zeros(len(r_band_shifts))\n",
+    "rscalevals=np.zeros(len(r_band_shifts))\n",
+    "rshiftvals=np.zeros(len(r_band_shifts))\n",
+    "for i in xrange(len(r_band_shifts)):\n",
+    "    rstretchvals[i]=paramslist_r[i][0].value\n",
+    "    rscalevals[i]=paramslist_r[i][2].value+r_band_shifts[i]\n",
+    "    rshiftvals[i]=paramslist_r[i][1].value\n",
+    "    #print paramslist[i][0].value\n",
+    "    #print paramslist[i][2]\n",
+    "    #print g_band_shifts[i]\n",
+    "    \n",
+    "strech_all=np.hstack((stretchvals,rstretchvals))\n",
+    "shift_all=np.hstack((shiftvals,rshiftvals))\n",
+    "scale_all=np.hstack((scalevals,rscalevals))\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 160,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.text.Text at 0x1438d7710>"
+      ]
+     },
+     "execution_count": 160,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "fig = plt.figure()\n",
+    "ax = fig.add_subplot(111, projection='3d')\n",
+    "\n",
+    "ax.scatter(scale_all, shift_all, strech_all)\n",
+    "ax.set_xlabel('scale')\n",
+    "ax.set_ylabel('shift')\n",
+    "ax.set_zlabel('stretch')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 223,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.text.Text at 0x110cc9b90>"
+      ]
+     },
+     "execution_count": 223,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "plt.scatter(scalevals[:14],stretchvals[:14])\n",
+    "plt.ylabel('stretch')\n",
+    "plt.xlabel('scale')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 122,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.cluster import KMeans\n",
+    "from mpl_toolkits.mplot3d import Axes3D\n",
+    "from sklearn.preprocessing import scale\n",
+    "from sklearn.cluster import AgglomerativeClustering as Ward\n",
+    "from sklearn.cluster import DBSCAN"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "strech_all=np.hstack((paramslist[:,0],paramslist_r[:,0]))\n",
+    "shift_all=np.hstack((paramslist[:,1],paramslist_r[:,1]))\n",
+    "scale_all=np.hstack((paramslist[:,2],paramslist_r[:,2]))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 234,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "broad=paramslist[8]\n",
+    "weird=paramslist[-1]\n",
+    "#paramslist[8][0].value\n",
+    "#print X2_i[8]\n",
+    "broad[2]+=g_band_shifts[8]\n",
+    "weird[2]+=g_band_shifts[-1]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 258,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "n_clusters = 3\n",
+    "clf = KMeans(n_clusters)\n",
+    "\n",
+    "X=numpy.vstack((scale_all,shift_all,strech_all)).T\n",
+    "\n",
+    "#scaler = preprocessing.StandardScaler().fit(X)\n",
+    "X=scale(X)\n",
+    "clf.fit(X)\n",
+    "labels = clf.predict(X)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 238,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "n_clusters = 2\n",
+    "clf2 = KMeans(n_clusters)\n",
+    "\n",
+    "X2=numpy.vstack((scale_all,strech_all)).T\n",
+    "#scaler = preprocessing.StandardScaler().fit(X)\n",
+    "X2=scale(X2)\n",
+    "clf2.fit(X2)\n",
+    "labels = clf2.predict(X2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 246,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.text.Text at 0x144e2ddd0>"
+      ]
+     },
+     "execution_count": 246,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#X=scaler.inverse_transform(X)\n",
+    "fig = plt.figure()\n",
+    "ax = fig.add_subplot(111)\n",
+    "#ax.scatter(X[:,0], X[:,1],s=30,c=labels, cmap='rainbow')\n",
+    "ax.scatter(scale_all, strech_all,s=30,c=labels, cmap='rainbow')\n",
+    "\n",
+    "ax.scatter(broad[2],broad[0],s=100,marker='s',alpha=0.7,color='gray')\n",
+    "ax.scatter(weird[2],weird[0],s=100,marker='s',alpha=0.7,color='gray')\n",
+    "ax.set_ylabel('stretch')\n",
+    "ax.set_xlabel('scale')\n",
+    "#ax.set_zlabel('stretch')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 247,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.text.Text at 0x1464f8c50>"
+      ]
+     },
+     "execution_count": 247,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "fig = plt.figure()\n",
+    "ax = fig.add_subplot(111, projection='3d')\n",
+    "#ax.scatter(X[:,0], X[:,1], X[:,2], c=labels, cmap='rainbow')\n",
+    "ax.scatter(scale_all, shift_all, strech_all, c=labels, cmap='rainbow')\n",
+    "\n",
+    "ax.scatter(broad[2],broad[1],broad[0],s=100,marker='s',alpha=0.7,color='gray')\n",
+    "ax.scatter(weird[2],weird[1],weird[0],s=100,marker='s',alpha=0.7,color='gray')\n",
+    "\n",
+    "ax.set_xlabel('scale')\n",
+    "ax.set_ylabel('shift')\n",
+    "ax.set_zlabel('stretch')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 265,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "db=DBSCAN(eps=0.9,min_samples=5).fit(X)\n",
+    "# Compute DBSCAN\n",
+    "core_samples_mask = np.zeros_like(db.labels_, dtype=bool)\n",
+    "core_samples_mask[db.core_sample_indices_] = True\n",
+    "labels = db.labels_\n",
+    "\n",
+    "# Number of clusters in labels, ignoring noise if present.\n",
+    "n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)\n",
+    "\n",
+    "fig = plt.figure()\n",
+    "ax = fig.add_subplot(111,projection='3d')\n",
+    "unique_labels = set(labels)\n",
+    "colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))\n",
+    "\n",
+    "#X=numpy.vstack((scale_all,shift_all,strech_all)).T\n",
+    "X=numpy.vstack((scale_all,shift_all,strech_all)).T\n",
+    "\n",
+    "for k, col in zip(unique_labels, colors):\n",
+    "    if k == -1:\n",
+    "        # Black used for noise.\n",
+    "        col = 'k'\n",
+    "\n",
+    "    class_member_mask = (labels == k)\n",
+    "\n",
+    "    xy = X[class_member_mask & core_samples_mask]\n",
+    "    ax.plot(xy[:, 0], xy[:, 1],xy[:, 2], 'o', markerfacecolor=col,\n",
+    "             markeredgecolor='k', markersize=14)\n",
+    "\n",
+    "    xy = X[class_member_mask & ~core_samples_mask]\n",
+    "    ax.plot(xy[:, 0], xy[:, 1],xy[:, 2], 'o', markerfacecolor=col,\n",
+    "             markeredgecolor='k', markersize=6)\n",
+    "ax.set_xlabel('scale')\n",
+    "ax.set_ylabel('shift')\n",
+    "ax.set_zlabel('stretch')\n",
+    "plt.title('Estimated number of clusters: %d' % n_clusters_)\n",
+    "plt.show()\n",
+    "\n",
+    "#clf_w=Ward()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 224,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<Parameter 'scale', value=-0.0008001632149090554 +/- 0.0709, bounds=[-6.0:6.0]> 11lmn 0.330618540701\n",
+      "<Parameter 'scale', value=0.10367064162920592 +/- 0.0351, bounds=[-6.0:6.0]> 14fuz 1.11786354261\n",
+      "<Parameter 'scale', value=0.02699407269077625 +/- 0.0389, bounds=[-6.0:6.0]> 14gao 2.38579201209\n",
+      "<Parameter 'scale', value=0.013931178878896944 +/- 0.0692, bounds=[-6.0:6.0]> 14gqr 0.928336295214\n",
+      "<Parameter 'scale', value=-0.067586603017278257 +/- 0.122, bounds=[-6.0:6.0]> 14ibr -1.24474988713\n",
+      "<Parameter 'scale', value=0.028831307725662114 +/- 0.0801, bounds=[-6.0:6.0]> 15acp -0.742906003578\n",
+      "<Parameter 'scale', value=0.33912788444212616 +/- 0.0789, bounds=[-6.0:6.0]> 15acr 1.32796523864\n",
+      "<Parameter 'scale', value=-0.20246876667735769 +/- 0.114, bounds=[-6.0:6.0]> 15afw 0.700556450026\n",
+      "<Parameter 'scale', value=-0.064350068588605147 +/- 0.0114, bounds=[-6.0:6.0]> 15cna -2.62728745994\n",
+      "<Parameter 'scale', value=-0.047269265823015161 +/- 0.0646, bounds=[-6.0:6.0]> 15cpq -0.132099216603\n",
+      "<Parameter 'scale', value=0.0064068884436903062 +/- 0.0365, bounds=[-6.0:6.0]> 15dpa -0.921890584627\n",
+      "<Parameter 'scale', value=-0.13493860522307166 +/- 1.02e+05, bounds=[-6.0:6.0]> 15dqg -1.46900743223\n",
+      "<Parameter 'scale', value=0.044025179445419838 +/- 0.0229, bounds=[-6.0:6.0]> 15dvg 0.561256258436\n",
+      "<Parameter 'scale', value=0.13772950756656321 +/- 0.109, bounds=[-6.0:6.0]> 15eqv 3.788555017\n"
+     ]
+    }
+   ],
+   "source": [
+    "for i,pa in enumerate(paramslist[:,2]):\n",
+    "    print pa,sng['name'][i],scalevals[i]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 153,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.text.Text at 0x142c01310>"
+      ]
+     },
+     "execution_count": 153,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "fig = plt.figure()\n",
+    "ax = fig.add_subplot(111, projection='3d')\n",
+    "ax.scatter(paramslist[:,1], paramslist[:,2], paramslist[:,0])\n",
+    "ax.set_ylabel('scale')\n",
+    "ax.set_xlabel('shift')\n",
+    "ax.set_zlabel('stretch')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Unused Functions"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Original individual fit"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 292,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "14gqr\n"
+     ]
+    }
+   ],
+   "source": [
+    "snno=3\n",
+    "rs=z(sng['name'][snno])\n",
+    "xdata=(sng['mag'][snno]['jd']-sng['mag'][snno]['jd'][0])/(1+rs)\n",
+    "ydata=sng['mag'][snno]['mag']-dm(rs)\n",
+    "errors=sng['mag'][snno]['err']\n",
+    "\n",
+    "bandpass='g'\n",
+    "#bandpass='r'\n",
+    "result=minimize(lets_interp_IIb,paramsIIb,args=(xdata[:-14],ydata[:-14],bandpass,None))\n",
+    "#result=minimize(lets_interp_IIb,paramsIIb,args=(xdata[:-14],ydata[:-14],bandpass,None))\n",
+    "\n",
+    "print sng['name'][snno]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 293,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<Parameter 'stretch', value=1.9999999918439135 +/- 1.45, bounds=[0.05:2.0]>\n",
+      "<Parameter 'shift', value=-15.491809807409076 +/- 19.5, bounds=[-50.0:50.0]>\n",
+      "<Parameter 'scale', value=-1.3694590857108686 +/- 0.38, bounds=[-5.0:5.0]>\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Save params\n",
+    "stretch_out=result.params['stretch']  \n",
+    "shift_out=result.params['shift']\n",
+    "scale_out=result.params['scale'] \n",
+    "print stretch_out\n",
+    "print shift_out\n",
+    "print scale_out"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 294,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2456935.73668\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.collections.LineCollection at 0x10e05ee50>"
+      ]
+     },
+     "execution_count": 294,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "bestmodel=lets_stretch(gphaseIIb,gmagsIIb,shift_out,stretch_out,scale_out)\n",
+    "#res,yfit=lets_interp(xdata,ydata)\n",
+    "#print yfit,ydata\n",
+    "\n",
+    "plt.errorbar(xdata,ydata,errors,c='black',linestyle='None',marker='s')\n",
+    "plt.plot(bestmodel[0],bestmodel[1],c='red')#,linestyle='None',marker='s')\n",
+    "#plt.scatter(xdata,ydata,c='red')\n",
+    "plt.gca().invert_yaxis()\n",
+    "\n",
+    "explosion_date=(bestmodel[0][0]*(1+rs))+sng['mag'][snno]['jd'][0]\n",
+    "print explosion_date\n",
+    "plt.vlines((explosion_date-sng['mag'][snno]['jd'][0])/(1+rs),ydata.min(),ydata.max())\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 221,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "def redchisqg(ydata,ymod,deg=3,sd=None):  \n",
+    "    \"\"\"  \n",
+    "    Returns the reduced chi-square error statistic for an arbitrary model,   \n",
+    "    chisq/nu, where nu is the number of degrees of freedom. If individual   \n",
+    "    standard deviations (array sd) are supplied, then the chi-square error   \n",
+    "    statistic is computed as the sum of squared errors divided by the standard   \n",
+    "    deviations. See http://en.wikipedia.org/wiki/Goodness_of_fit for reference.  \n",
+    "\n",
+    "    ydata,ymod,sd assumed to be Numpy arrays. deg integer.  \n",
+    "\n",
+    "    Usage:  \n",
+    "    >>> chisq=redchisqg(ydata,ymod,n,sd)  \n",
+    "    where  \n",
+    "    ydata : data  \n",
+    "    ymod : model evaluated at the same x points as ydata  \n",
+    "    n : number of free parameters in the model  \n",
+    "    sd : uncertainties in ydata  \n",
+    "\n",
+    "    Rodrigo Nemmen  \n",
+    "    http://goo.gl/8S1Oo  \n",
+    "    \"\"\"  \n",
+    "    # Chi-square statistic  \n",
+    "    if sd==None:  \n",
+    "        chisq=numpy.sum((ydata-ymod)**2)  \n",
+    "    else:  \n",
+    "        chisq=numpy.sum( ((ydata-ymod)/sd)**2 )  \n",
+    "\n",
+    "    # Number of degrees of freedom assuming 2 free parameters  \n",
+    "    nu=ydata.size-1-deg  \n",
+    "\n",
+    "    return chisq/nu"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 432,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0.908611099972\n",
+      "1.99980796616\n",
+      "2.0\n",
+      "1.99999983718\n",
+      "1.05402620058\n",
+      "1.99387476631\n",
+      "1.30309924726\n",
+      "0.910003236876\n",
+      "0.910003236876\n",
+      "1.99599370969\n",
+      "1.99599370969\n",
+      "1.13104646954\n",
+      "0.912776783824\n",
+      "1.99999999974\n",
+      "0.696614529972\n",
+      "0.863975486807\n",
+      "0.842384544976\n",
+      "0.3631434794\n",
+      "1.15237572147\n",
+      "0.598079749831\n",
+      "1.22811502077\n",
+      "1.01480818759\n",
+      "1.01480818759\n",
+      "1.99999990286\n",
+      "0.228552257009\n",
+      "0.896286605537\n",
+      "0.742574449498\n",
+      "1.25834033448\n",
+      "1.25834033448\n",
+      "1.75380451153\n",
+      "1.99999949521\n",
+      "1.24472251555\n",
+      "1.13809693999\n",
+      "0.61617902815\n",
+      "0.781963729234\n",
+      "0.947858315767\n",
+      "0.759674862789\n",
+      "1.62538197084\n",
+      "0.655220842669\n",
+      "0.828548868601\n",
+      "0.696260220229\n",
+      "1.84792357824\n",
+      "1.68324991973\n",
+      "0.915969567261\n",
+      "1.09755085494\n",
+      "1.9348970551\n",
+      "1.99999997839\n",
+      "0.576458229281\n",
+      "1.01317781642\n",
+      "0.779407844596\n",
+      "1.99999967204\n",
+      "0.538844198952\n",
+      "0.752486183245\n",
+      "0.702756972026\n",
+      "0.661035064115\n",
+      "0.745698698415\n",
+      "1.21635400396\n",
+      "1.39021889509\n",
+      "0.60164314035\n",
+      "1.58278837883\n",
+      "0.834911692822\n",
+      "1.11339448571\n",
+      "2.0\n",
+      "0.955503293037\n",
+      "0.908226283448\n",
+      "0.82343206266\n",
+      "0.393178251505\n",
+      "1.46293446679\n",
+      "0.449095228541\n",
+      "1.04834340188\n",
+      "1.04834340188\n",
+      "1.95953284505\n",
+      "1.03356342736\n",
+      "1.99999994625\n",
+      "0.807188501375\n",
+      "1.01804539742\n",
+      "1.99999988291\n",
+      "1.23379256199\n",
+      "1.13591829957\n",
+      "1.99999991128\n",
+      "0.451126534371\n",
+      "1.99998390979\n",
+      "1.76416259736\n",
+      "0.720057514913\n",
+      "0.651800054977\n",
+      "1.99999997649\n",
+      "0.824890640711\n",
+      "0.528536863358\n",
+      "1.57346505498\n",
+      "1.66050403802\n",
+      "1.38438552376\n",
+      "0.988426371239\n",
+      "0.485729354456\n",
+      "1.99999999982\n",
+      "1.99999999986\n",
+      "1.97314413759\n",
+      "1.03970856687\n",
+      "1.99999965383\n",
+      "1.82379942673\n",
+      "1.99999881713\n",
+      "1.99999782352\n",
+      "0.934852573972\n",
+      "0.115533496989\n",
+      "1.99999999998\n",
+      "0.711554235285\n",
+      "0.65210150296\n",
+      "0.78512033771\n",
+      "0.993048002633\n",
+      "1.9999999885\n",
+      "0.983860524213\n",
+      "1.04627954115\n",
+      "0.525620416497\n",
+      "1.99999999956\n",
+      "0.493293153457\n",
+      "1.99984376076\n",
+      "0.601866083877\n",
+      "0.28937683627\n",
+      "0.625730818923\n",
+      "1.16788302745\n",
+      "0.718018876211\n"
+     ]
+    }
+   ],
+   "source": [
+    "for par in paramslist_r:\n",
+    "    print par[0].value"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 0
+}

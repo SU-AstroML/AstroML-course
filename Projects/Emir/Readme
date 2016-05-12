@@ -1,0 +1,5 @@
+Readme
+
+Explosion Epochs.ipynb.json: I am including the entire ipython notebook I used to combine the data, pre-process it, fit it with the models, and then apply the clustering algorithm. 
+Cluster_algorithm_part: The part where I used the model fitted data to do clustering algorithm. I copy pasted this from the larger ipython notebook.
+data.zip: Contains the data as numpy arrays used in the entire notebook.
